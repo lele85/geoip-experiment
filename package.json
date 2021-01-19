@@ -1,0 +1,16 @@
+{
+    "name": "geoip-experiment",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "build": "rm -rf ./out/*.json && node ./src/index.js",
+        "clean": "rm -rf ./out/*.json"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "inet": "0.0.3",
+        "ip-cidr": "^2.1.1",
+        "prettier": "^2.2.1"
+    }
+}
