@@ -4,7 +4,8 @@
     "description": "",
     "scripts": {
         "build": "rm -rf ./out/*.json && node ./src/index.js",
-        "clean": "rm -rf ./out/*.json"
+        "clean": "rm -rf ./out/*.json",
+        "bench-parse": "node ./src/benchmark-parse.js"
     },
     "author": "",
     "license": "ISC",

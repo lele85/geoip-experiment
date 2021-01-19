@@ -30,6 +30,18 @@ the output will be located in `./out` as a series of `${id}.json` and a `manifes
 npm run clean
 ```
 
+## Benchmark the chunk Parsing
+
+```
+npm run build
+npm run bench-parse
+```
+
+```
+Max parse time: 28
+Avg parse time: 10.903171953255425
+```
+
 ## Output format:
 
 `manifest.json` is a positional array with the ip range start:
