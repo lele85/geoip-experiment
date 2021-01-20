@@ -31,3 +31,21 @@ the output will be located in `./out` named like this:
 ```
 npm run clean
 ```
+
+## Run a local dynamodb mock
+
+```
+npm run dynamodb-run
+```
+
+## Insert IPv4 data into dynamodb mock
+
+```
+npm run dynamodb-insert
+```
+
+## Run a test query on dynamodb mock
+
+```
+npm run dynamodb-insert
+```
