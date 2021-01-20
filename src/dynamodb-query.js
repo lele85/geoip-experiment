@@ -25,16 +25,6 @@ const IP_HASH_DIMENSION = 5000;
         ScanIndexForward: false,
         ReturnConsumedCapacity: "TOTAL",
     });
+    console.log(res.ConsumedCapacity);
     console.log(res.Items);
 })();
-
-/**
- * ExpressionAttributeValues: {
-   ":v1": {
-     S: "No One You Know"
-    }
-  }, 
-  KeyConditionExpression: "Artist = :v1", 
-  ProjectionExpression: "SongTitle", 
-  TableName: "Music"
- */

@@ -77,7 +77,7 @@ async function writeBatch() {
             longitude,
             accuracy_radius,
         ] = line.split(",");
-        geoname_id = geoname_id ? parseInt(geoname_id, 10) : -1;
+        geoname_id = geoname_id ? parseInt(geoname_id, 10) : 0;
         const ip_start = new IPCIDR(network).start();
         const ip_start_number = inet.aton(ip_start);
         const ip_hash = Math.floor(ip_start_number / IP_HASH_DIMENSION);
