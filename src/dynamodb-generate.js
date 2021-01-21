@@ -2,11 +2,11 @@ const readline = require("readline");
 const fs = require("fs");
 const inet = require("inet");
 const IPCIDR = require("ip-cidr");
+const ipUtils = require("./lib/ipUtils");
 const argv = require("minimist")(process.argv.slice(2), {
-    boolean: ["location"],
+    boolean: ["locations"],
     default: {
-        location: false,
-        chunks: 5000,
+        locations: false,
     },
 });
 
@@ -64,7 +64,6 @@ const locations = {};
 
 // Blocks
 (async function () {
-    const NUMBER_OF_CHUNKS = argv.chunks;
     const ETX = "\3";
     const STX = "\2";
 
@@ -77,14 +76,11 @@ const locations = {};
     });
     const outFile = await fs.promises.open(
         __dirname +
-            `/../out/out-${NUMBER_OF_CHUNKS}-${
-                argv.location ? "with" : "no"
-            }-locations.json`,
+            `/../out/out-${argv.locations ? "with" : "no"}-locations.json`,
         "w"
     );
 
     let skip = true;
-    let count = 0;
     for await (const line of readBlocks) {
         if (skip) {
             skip = false;
@@ -106,7 +102,7 @@ const locations = {};
         postal_code = postal_code.replace(/\"/g, "");
         const ip_start = new IPCIDR(network).start();
         const ip_start_number = inet.aton(ip_start);
-        const ip_hash = ip_start_number % NUMBER_OF_CHUNKS;
+        const ip_hash = ipUtils.getIPv4HashKey(ip_start);
         const l = locations[`${geoname_id}`] || {
             locale_code: "",
             continent_code: "",
@@ -128,7 +124,7 @@ const locations = {};
             `${STX}gid${ETX}{"n":"${geoname_id}"}` +
             `${STX}pc${ETX}{"s":"${postal_code}"}`;
 
-        const record_location = argv.location
+        const record_location = argv.locations
             ? `${STX}lc${ETX}{"s":"${l.locale_code}"}` +
               `${STX}con_c${ETX}{"s":"${l.continent_code}"}` +
               `${STX}con_n${ETX}{"s":"${l.continent_name}"}` +
@@ -144,6 +140,5 @@ const locations = {};
             : "";
 
         outFile.write(`${record_base}${record_location}\n`);
-        count++;
     }
 })();

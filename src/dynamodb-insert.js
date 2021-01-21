@@ -3,6 +3,7 @@ const readline = require("readline");
 const fs = require("fs");
 const inet = require("inet");
 const IPCIDR = require("ip-cidr");
+const ipUtils = require("./lib/ipUtils");
 
 const db = new DynamoDB({
     region: "us-west-2",
@@ -16,12 +17,12 @@ function createDatabase() {
     var params = {
         TableName: "geoip",
         KeySchema: [
-            { AttributeName: "ip_hash", KeyType: "HASH" }, // Partition key
-            { AttributeName: "ip_start_number", KeyType: "RANGE" }, //Sort key
+            { AttributeName: "iph", KeyType: "HASH" }, // Partition key
+            { AttributeName: "ips", KeyType: "RANGE" }, //Sort key
         ],
         AttributeDefinitions: [
-            { AttributeName: "ip_hash", AttributeType: "N" },
-            { AttributeName: "ip_start_number", AttributeType: "N" },
+            { AttributeName: "iph", AttributeType: "N" },
+            { AttributeName: "ips", AttributeType: "N" },
         ],
         ProvisionedThroughput: {
             ReadCapacityUnits: 5,
@@ -76,11 +77,12 @@ async function writeBatch() {
             latitude,
             longitude,
             accuracy_radius,
-        ] = line.split(",");
+        ] = line.split(",").map((value) => value.replace(/\"/g, ""));
+
         geoname_id = geoname_id ? parseInt(geoname_id, 10) : 0;
         const ip_start = new IPCIDR(network).start();
         const ip_start_number = inet.aton(ip_start);
-        const ip_hash = ip_start_number % NUMBER_OF_CHUNKS;
+        const ip_hash = ipUtils.getIPv4HashKey(ip_start);
         if (batch.length === 25) {
             await writeBatch();
             batch = [];
@@ -88,10 +90,10 @@ async function writeBatch() {
             batch.push({
                 PutRequest: {
                     Item: {
-                        ip_hash: { N: ip_hash },
-                        ip_start_number: { N: ip_start_number },
-                        geoname_id: { N: geoname_id },
-                        postal_code: { S: postal_code },
+                        iph: { N: ip_hash },
+                        ips: { N: ip_start_number },
+                        gid: { N: geoname_id },
+                        pc: { S: postal_code },
                     },
                 },
             });
