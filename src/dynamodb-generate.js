@@ -64,7 +64,7 @@ const locations = {};
 
 // Blocks
 (async function () {
-    const IP_HASH_DIMENSION = argv.chunks;
+    const NUMBER_OF_CHUNKS = argv.chunks;
     const ETX = "\3";
     const STX = "\2";
 
@@ -77,7 +77,7 @@ const locations = {};
     });
     const outFile = await fs.promises.open(
         __dirname +
-            `/../out/out-${IP_HASH_DIMENSION}-${
+            `/../out/out-${NUMBER_OF_CHUNKS}-${
                 argv.location ? "with" : "no"
             }-locations.json`,
         "w"
@@ -106,7 +106,7 @@ const locations = {};
         postal_code = postal_code.replace(/\"/g, "");
         const ip_start = new IPCIDR(network).start();
         const ip_start_number = inet.aton(ip_start);
-        const ip_hash = Math.floor(ip_start_number / IP_HASH_DIMENSION);
+        const ip_hash = ip_start_number % NUMBER_OF_CHUNKS;
         const l = locations[`${geoname_id}`] || {
             locale_code: "",
             continent_code: "",

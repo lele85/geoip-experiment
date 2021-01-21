@@ -6,12 +6,12 @@ const db = new DynamoDB({
     endpoint: "http://localhost:8000",
 });
 
-const IP_HASH_DIMENSION = 5000;
+const NUMBER_OF_CHUNKS = 5000;
 
 (async function () {
     const ip = "1.1.1.1";
     const ip_num = inet.aton(ip);
-    const ip_hash = Math.floor(ip_num / IP_HASH_DIMENSION);
+    const ip_hash = ip_num % NUMBER_OF_CHUNKS;
 
     const res = await db.query({
         TableName: "geoip",

@@ -10,7 +10,7 @@ const db = new DynamoDB({
 });
 
 const ITEMS_TO_SAVE = 5000;
-const IP_HASH_DIMENSION = 5000;
+const NUMBER_OF_CHUNKS = 5000;
 
 function createDatabase() {
     var params = {
@@ -80,7 +80,7 @@ async function writeBatch() {
         geoname_id = geoname_id ? parseInt(geoname_id, 10) : 0;
         const ip_start = new IPCIDR(network).start();
         const ip_start_number = inet.aton(ip_start);
-        const ip_hash = Math.floor(ip_start_number / IP_HASH_DIMENSION);
+        const ip_hash = ip_start_number % NUMBER_OF_CHUNKS;
         if (batch.length === 25) {
             await writeBatch();
             batch = [];
