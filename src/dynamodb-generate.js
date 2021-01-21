@@ -62,6 +62,7 @@ console.log(argv[0]);
             accuracy_radius,
         ] = line.split(",");
         geoname_id = geoname_id ? parseInt(geoname_id, 10) : 0;
+        postal_code = postal_code.replace(/\"/g, "");
         const ip_start = new IPCIDR(network).start();
         const ip_start_number = inet.aton(ip_start);
         const ip_hash = Math.floor(ip_start_number / IP_HASH_DIMENSION);
@@ -70,5 +71,4 @@ console.log(argv[0]);
         );
         count++;
     }
-    await writeBatch();
 })();
