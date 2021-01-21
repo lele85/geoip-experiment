@@ -41,7 +41,7 @@ const locations = {};
             metro_code,
             time_zone,
             is_in_european_union,
-        ] = line.split(",").map((value) => (value || "").replace('"', ""));
+        ] = line.split(",").map((value) => (value || "").replace(/\"/g, ""));
         geoname_id = parseInt(geoname_id, 10);
         is_in_european_union = parseInt(is_in_european_union, 10) || 0;
 
