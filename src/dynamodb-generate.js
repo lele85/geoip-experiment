@@ -2,10 +2,15 @@ const readline = require("readline");
 const fs = require("fs");
 const inet = require("inet");
 const IPCIDR = require("ip-cidr");
-const { argv } = require("process");
+const argv = require("minimist")(process.argv.slice(2), {
+    boolean: ["location"],
+    default: {
+        location: false,
+        chunks: 5000,
+    },
+});
 
-console.log(argv[0]);
-
+const locations = {};
 // Locations
 (async function () {
     const readLocation = readline.createInterface({
@@ -21,12 +26,45 @@ console.log(argv[0]);
             skip = false;
             continue;
         }
+        let [
+            geoname_id,
+            locale_code,
+            continent_code,
+            continent_name,
+            country_iso_code,
+            country_name,
+            subdivision_1_iso_code,
+            subdivision_1_name,
+            subdivision_2_iso_code,
+            subdivision_2_name,
+            city_name,
+            metro_code,
+            time_zone,
+            is_in_european_union,
+        ] = line.split(",").map((value) => (value || "").replace('"', ""));
+        geoname_id = parseInt(geoname_id, 10);
+        is_in_european_union = parseInt(is_in_european_union, 10) || 0;
+
+        locations[geoname_id] = {
+            locale_code,
+            continent_code,
+            continent_name,
+            country_iso_code,
+            country_name,
+            subdivision_1_iso_code,
+            subdivision_1_name,
+            subdivision_2_iso_code,
+            subdivision_2_name,
+            city_name,
+            metro_code,
+            is_in_european_union,
+        };
     }
 })();
 
 // Blocks
 (async function () {
-    const IP_HASH_DIMENSION = 5000;
+    const IP_HASH_DIMENSION = argv.chunks;
     const ETX = "\3";
     const STX = "\2";
 
@@ -38,7 +76,10 @@ console.log(argv[0]);
         console: false,
     });
     const outFile = await fs.promises.open(
-        __dirname + `/../out/out-${IP_HASH_DIMENSION}-no-location.json`,
+        __dirname +
+            `/../out/out-${IP_HASH_DIMENSION}-${
+                argv.location ? "with" : "no"
+            }-locations.json`,
         "w"
     );
 
@@ -66,9 +107,43 @@ console.log(argv[0]);
         const ip_start = new IPCIDR(network).start();
         const ip_start_number = inet.aton(ip_start);
         const ip_hash = Math.floor(ip_start_number / IP_HASH_DIMENSION);
-        outFile.write(
-            `iph${ETX}{"n":"${ip_hash}"}${STX}ips${ETX}{"n":"${ip_start_number}"}${STX}gid${ETX}{"n":"${geoname_id}"}${STX}pc${ETX}{"s":"${postal_code}"}\n`
-        );
+        const l = locations[`${geoname_id}`] || {
+            locale_code: "",
+            continent_code: "",
+            continent_name: "",
+            country_iso_code: "",
+            country_name: "",
+            subdivision_1_iso_code: "",
+            subdivision_1_name: "",
+            subdivision_2_iso_code: "",
+            subdivision_2_name: "",
+            city_name: "",
+            metro_code: "",
+            is_in_european_union: 0,
+        };
+
+        const record_base =
+            `iph${ETX}{"n":"${ip_hash}"}` +
+            `${STX}ips${ETX}{"n":"${ip_start_number}"}` +
+            `${STX}gid${ETX}{"n":"${geoname_id}"}` +
+            `${STX}pc${ETX}{"s":"${postal_code}"}`;
+
+        const record_location = argv.location
+            ? `${STX}lc${ETX}{"s":"${l.locale_code}"}` +
+              `${STX}con_c${ETX}{"s":"${l.continent_code}"}` +
+              `${STX}con_n${ETX}{"s":"${l.continent_name}"}` +
+              `${STX}cou_c${ETX}{"s":"${l.country_iso_code}"}` +
+              `${STX}cou_n${ETX}{"s":"${l.country_name}"}` +
+              `${STX}s1_c${ETX}{"s":"${l.subdivision_1_iso_code}"}` +
+              `${STX}s1_n${ETX}{"s":"${l.subdivision_1_name}"}` +
+              `${STX}s2_c${ETX}{"s":"${l.subdivision_2_iso_code}"}` +
+              `${STX}s2_n${ETX}{"s":"${l.subdivision_2_name}"}` +
+              `${STX}cy_n${ETX}{"s":"${l.city_name}"}` +
+              `${STX}m_c${ETX}{"s":"${l.metro_code}"}` +
+              `${STX}is_eu${ETX}{"n":"${l.is_in_european_union}"}`
+            : "";
+
+        outFile.write(`${record_base}${record_location}\n`);
         count++;
     }
 })();
