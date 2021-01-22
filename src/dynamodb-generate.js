@@ -11,6 +11,8 @@ const argv = require("minimist")(process.argv.slice(2), {
 });
 
 const locations = {};
+let stats = {};
+
 // Locations
 (async function () {
     const readLocation = readline.createInterface({
@@ -118,27 +120,53 @@ const locations = {};
             is_in_european_union: 0,
         };
 
-        const record_base =
-            `iph${ETX}{"n":"${ip_hash}"}` +
-            `${STX}ips${ETX}{"n":"${ip_start_number}"}` +
-            `${STX}gid${ETX}{"n":"${geoname_id}"}` +
-            `${STX}pc${ETX}{"s":"${postal_code}"}`;
+        stats[ip_hash] = (stats[ip_hash] || 0) + 1;
 
-        const record_location = argv.locations
-            ? `${STX}lc${ETX}{"s":"${l.locale_code}"}` +
-              `${STX}con_c${ETX}{"s":"${l.continent_code}"}` +
-              `${STX}con_n${ETX}{"s":"${l.continent_name}"}` +
-              `${STX}cou_c${ETX}{"s":"${l.country_iso_code}"}` +
-              `${STX}cou_n${ETX}{"s":"${l.country_name}"}` +
-              `${STX}s1_c${ETX}{"s":"${l.subdivision_1_iso_code}"}` +
-              `${STX}s1_n${ETX}{"s":"${l.subdivision_1_name}"}` +
-              `${STX}s2_c${ETX}{"s":"${l.subdivision_2_iso_code}"}` +
-              `${STX}s2_n${ETX}{"s":"${l.subdivision_2_name}"}` +
-              `${STX}cy_n${ETX}{"s":"${l.city_name}"}` +
-              `${STX}m_c${ETX}{"s":"${l.metro_code}"}` +
-              `${STX}is_eu${ETX}{"n":"${l.is_in_european_union}"}`
-            : "";
-
-        outFile.write(`${record_base}${record_location}\n`);
+        if (!argv.locations) {
+            outFile.write(
+                `iph${ETX}{"n":"${ip_hash}"}` +
+                    `${STX}ips${ETX}{"n":"${ip_start_number}"}` +
+                    `${STX}gid${ETX}{"n":"${geoname_id}"}` +
+                    `${STX}pc${ETX}{"s":"${postal_code}"}\n`
+            );
+        } else {
+            outFile.write(
+                `iph${ETX}{"n":"${ip_hash}"}` +
+                    `${STX}ips${ETX}{"n":"${ip_start_number}"}` +
+                    `${STX}pc${ETX}{"s":"${postal_code}"}` +
+                    `${STX}lc${ETX}{"s":"${l.locale_code}"}` +
+                    `${STX}con_c${ETX}{"s":"${l.continent_code}"}` +
+                    `${STX}con_n${ETX}{"s":"${l.continent_name}"}` +
+                    `${STX}cou_c${ETX}{"s":"${l.country_iso_code}"}` +
+                    `${STX}cou_n${ETX}{"s":"${l.country_name}"}` +
+                    `${STX}s1_c${ETX}{"s":"${l.subdivision_1_iso_code}"}` +
+                    `${STX}s1_n${ETX}{"s":"${l.subdivision_1_name}"}` +
+                    `${STX}s2_c${ETX}{"s":"${l.subdivision_2_iso_code}"}` +
+                    `${STX}s2_n${ETX}{"s":"${l.subdivision_2_name}"}` +
+                    `${STX}cy_n${ETX}{"s":"${l.city_name}"}` +
+                    `${STX}m_c${ETX}{"s":"${l.metro_code}"}` +
+                    `${STX}is_eu${ETX}{"n":"${l.is_in_european_union}"}\n`
+            );
+        }
     }
+    // Stats
+    let max = 0;
+    let min = 1000;
+    let keys = Object.keys(stats);
+    let occurences = {};
+    keys.forEach((key) => {
+        const val = stats[key];
+        if (val > max) {
+            max = stats[key];
+        }
+        if (val < min) {
+            min = stats[key];
+        }
+        occurences[val] = (occurences[val] || 0) + 1;
+    });
+
+    console.log("Max", max);
+    console.log("Min", min);
+    console.log("Buckets", keys.length);
+    console.log("Occurrences", occurences);
 })();

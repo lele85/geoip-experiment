@@ -1,5 +1,9 @@
+const { aton } = require("inet");
+
 module.exports = {
     getIPv4HashKey: (ip) => {
-        return parseInt(ip.split(".")[0], 10);
+        const ip_num = aton(ip);
+        const hash = ip_num % 128000000;
+        return hash;
     },
 };
