@@ -19,33 +19,18 @@ You must put maxmind CSVs into the `data` folder:
 ## Generate the database:
 
 ```
-npm run build -- --locations=${true|false}
+npm run build
 ```
 
 the output will be located in `./out` named like this:
 
-`./out/out-${with|no}-locations.json`
+`./out/out-with-locations.json`
 
-### Example entry with locations:
+### Example entry:
 
-`iph{"n":"1"}ips{"n":"3758095872"}pc{"s":"18"}lc{"s":"en"}con_c{"s":"AS"}con_n{"s":"Asia"}cou_c{"s":"SG"}cou_n{"s":"Singapore"}s1_c{"s":""}s1_n{"s":""}s2_c{"s":""}s2_n{"s":""}cy_n{"s":"Singapore"}m_c{"s":""}is_eu{"n":"0"}`
-
-### Example entry without locations:
-
-`iph{"n":"1"}ips{"n":"3758095872"}gid{"n":"1880252"}pc{"s":"18"}`
+`iph{"n":"281021"}ips{"n":"3758092288"}pc{"s":""}lc{"s":"en"}con_c{"s":"AS"}con_n{"s":"Asia"}cou_c{"s":"HK"}cou_n{"s":"Hong Kong"}s1_c{"s":""}s1_n{"s":""}s2_c{"s":""}s2_n{"s":""}cy_n{"s":""}m_c{"s":""}is_eu{"n":"0"}`
 
 ### Table of fields in the resulting database:
-
-No locations:
-
-| column name | description                                          | value type |
-| ----------- | ---------------------------------------------------- | ---------- |
-| iph         | ip hash used for the hash key.                       | Number     |
-| ips         | ip start as number                                   | Number     |
-| gid         | geolocation_id (0 when the geolocation is not known) | Number     |
-| pc          | postal_code ("" when unknown)                        | String     |
-
-With locations:
 
 | column name | description                          | value type |
 | ----------- | ------------------------------------ | ---------- |
@@ -86,5 +71,5 @@ npm run dynamodb-insert
 ## Run a test query on dynamodb mock
 
 ```
-npm run dynamodb-insert
+npm run dynamodb-query
 ```

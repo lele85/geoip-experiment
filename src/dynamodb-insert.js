@@ -1,17 +1,13 @@
 const { DynamoDB } = require("@aws-sdk/client-dynamodb");
 const readline = require("readline");
 const fs = require("fs");
-const inet = require("inet");
-const IPCIDR = require("ip-cidr");
-const ipUtils = require("./lib/ipUtils");
+const Locations = require("./lib/Locations");
+const Blocks = require("./lib/Blocks");
 
 const db = new DynamoDB({
     region: "us-west-2",
     endpoint: "http://localhost:8000",
 });
-
-const ITEMS_TO_SAVE = 5000;
-const NUMBER_OF_CHUNKS = 5000;
 
 function createDatabase() {
     var params = {
@@ -50,8 +46,9 @@ async function writeBatch() {
     });
 }
 
-(async function () {
+(async () => {
     await createDatabase();
+    await Locations.loadLocations();
     const readBlocks = readline.createInterface({
         input: fs.createReadStream(
             __dirname + "/../data/GeoIp2-City-Blocks-IPv4.csv"
@@ -59,48 +56,53 @@ async function writeBatch() {
         output: false,
         console: false,
     });
+
     let skip = true;
+    let BLOCKS_PER_HASH = 32;
+    let current_hash = 0;
     let count = 0;
+
     for await (const line of readBlocks) {
         if (skip) {
             skip = false;
             continue;
         }
-        let [
-            network,
-            geoname_id,
-            registered_country_geoname_id,
-            represented_country_geoname_id,
-            is_anonymous_proxy,
-            is_satellite_provider,
-            postal_code,
-            latitude,
-            longitude,
-            accuracy_radius,
-        ] = line.split(",").map((value) => value.replace(/\"/g, ""));
+        const entry = Blocks.getEntryFromLine(line);
+        const location = Locations.getLocation(entry.gid);
 
-        geoname_id = geoname_id ? parseInt(geoname_id, 10) : 0;
-        const ip_start = new IPCIDR(network).start();
-        const ip_start_number = inet.aton(ip_start);
-        const ip_hash = ipUtils.getIPv4HashKey(ip_start);
+        if (count === BLOCKS_PER_HASH - 1) {
+            current_hash += 1;
+            count = 0;
+        } else {
+            count += 1;
+        }
+
         if (batch.length === 25) {
             await writeBatch();
             batch = [];
-        } else {
-            batch.push({
-                PutRequest: {
-                    Item: {
-                        iph: { N: ip_hash },
-                        ips: { N: ip_start_number },
-                        gid: { N: geoname_id },
-                        pc: { S: postal_code },
-                    },
-                },
-            });
         }
 
-        count++;
-        console.log(count);
+        batch.push({
+            PutRequest: {
+                Item: {
+                    iph: { N: current_hash },
+                    ips: { N: entry.ips },
+                    pc: { S: entry.pc },
+                    lc: { S: location.lc },
+                    con_c: { S: location.con_c },
+                    con_n: { S: location.con_n },
+                    cou_c: { S: location.cou_c },
+                    cou_n: { S: location.cou_n },
+                    s1_c: { S: location.s1_c },
+                    s1_n: { S: location.s1_n },
+                    s2_c: { S: location.s2_c },
+                    s2_n: { S: location.s2_n },
+                    cy_n: { S: location.cy_n },
+                    m_c: { S: location.m_c },
+                    is_eu: { N: location.is_eu },
+                },
+            },
+        });
     }
     await writeBatch();
 })();

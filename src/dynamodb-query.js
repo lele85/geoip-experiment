@@ -1,6 +1,7 @@
 const { DynamoDB } = require("@aws-sdk/client-dynamodb");
 const inet = require("inet");
-const ipUtils = require("./lib/ipUtils");
+const manifest = require("../out/manifest.json");
+const Hash = require("./lib/Hash");
 
 const db = new DynamoDB({
     region: "us-west-2",
@@ -8,9 +9,9 @@ const db = new DynamoDB({
 });
 
 (async function () {
-    const ip = "1.1.1.1";
+    const ip = "11.12.3.4";
     const ip_num = inet.aton(ip);
-    const ip_hash = ipUtils.getIPv4HashKey(ip);
+    const ip_hash = Hash.findHash(ip);
 
     const res = await db.query({
         TableName: "geoip",
