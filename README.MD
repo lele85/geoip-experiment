@@ -1,6 +1,6 @@
 # GeoIP Experiment
 
-Experiment to fit and query MaxMind database into dynamodb. For now it only works with `IPv4`.
+Experiment to fit and query MaxMind database into dynamodb. Works with `IPv4` and `IPv6`.
 
 ## Prerequisites:
 
