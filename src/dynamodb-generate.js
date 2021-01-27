@@ -2,23 +2,32 @@ const readline = require("readline");
 const fs = require("fs");
 const Locations = require("./lib/Locations");
 const Blocks = require("./lib/Blocks");
+const {
+    getBlocksPath,
+    getOutPath,
+    getManifestPath,
+    getTableName,
+    getDate,
+    assertType,
+} = require("./lib/Files");
 
-const IP_TYPE = "IPv4";
-const DATE = new Date().toISOString().split("T")[0].replace(/-/g, "");
+const argv = require("minimist")(process.argv.slice(2), {
+    string: ["type"],
+    default: {
+        type: "IPv4",
+    },
+});
+
+assertType(argv.type);
 
 (async () => {
     await Locations.loadLocations();
     const readBlocks = readline.createInterface({
-        input: fs.createReadStream(
-            `${__dirname}/../data/GeoIp2-City-Blocks-${IP_TYPE}.csv`
-        ),
+        input: fs.createReadStream(getBlocksPath(argv.type)),
         output: false,
         console: false,
     });
-    const outFile = await fs.promises.open(
-        __dirname + `/../out/${DATE}_out_${IP_TYPE.toLowerCase()}.json`,
-        "w"
-    );
+    const outFile = await fs.promises.open(getOutPath(argv.type), "w");
 
     let skip = true;
     let BLOCKS_PER_HASH = 32;
@@ -30,7 +39,7 @@ const DATE = new Date().toISOString().split("T")[0].replace(/-/g, "");
             skip = false;
             continue;
         }
-        const entry = Blocks.getEntryFromLine(line);
+        const entry = Blocks.getEntryFromLine(line, argv.type);
         const location = Locations.getLocation(entry.gid);
         outFile.write(Blocks.getExportedEntry(current_hash, entry, location));
         if (count === 0) {
@@ -46,13 +55,14 @@ const DATE = new Date().toISOString().split("T")[0].replace(/-/g, "");
 
     // Write manifest
     const manifestFile = await fs.promises.open(
-        `${__dirname}/../out/${DATE}-manifest-${IP_TYPE.toLowerCase()}.json`,
+        getManifestPath(argv.type),
         "w"
     );
+
     manifestFile.write(
         JSON.stringify({
-            date: DATE,
-            table: `${DATE}_geoip_${IP_TYPE.toLowerCase()}`,
+            date: getDate(argv.type),
+            table: getTableName(argv.type),
             locations: manifest_locations,
         })
     );

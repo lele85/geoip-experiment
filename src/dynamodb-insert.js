@@ -3,6 +3,18 @@ const readline = require("readline");
 const fs = require("fs");
 const Locations = require("./lib/Locations");
 const Blocks = require("./lib/Blocks");
+const { assertType, getManifest, getBlocksPath } = require("./lib/Files");
+
+const argv = require("minimist")(process.argv.slice(2), {
+    string: ["type"],
+    default: {
+        type: "IPv4",
+    },
+});
+
+assertType(argv.type);
+
+const manifest = getManifest(argv.type);
 
 const db = new DynamoDB({
     region: "us-west-2",
@@ -11,7 +23,7 @@ const db = new DynamoDB({
 
 function createDatabase() {
     var params = {
-        TableName: "geoip",
+        TableName: manifest.table,
         KeySchema: [
             { AttributeName: "iph", KeyType: "HASH" }, // Partition key
             { AttributeName: "ips", KeyType: "RANGE" }, //Sort key
@@ -21,8 +33,8 @@ function createDatabase() {
             { AttributeName: "ips", AttributeType: "N" },
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5,
+            ReadCapacityUnits: 1000,
+            WriteCapacityUnits: 1000,
         },
     };
     return new Promise((resolve) => {
@@ -41,7 +53,7 @@ let batch = [];
 async function writeBatch() {
     return await db.batchWriteItem({
         RequestItems: {
-            geoip: batch,
+            [manifest.table]: batch,
         },
     });
 }
@@ -50,9 +62,7 @@ async function writeBatch() {
     await createDatabase();
     await Locations.loadLocations();
     const readBlocks = readline.createInterface({
-        input: fs.createReadStream(
-            __dirname + "/../data/GeoIp2-City-Blocks-IPv4.csv"
-        ),
+        input: fs.createReadStream(getBlocksPath(argv.type)),
         output: false,
         console: false,
     });
@@ -67,7 +77,7 @@ async function writeBatch() {
             skip = false;
             continue;
         }
-        const entry = Blocks.getEntryFromLine(line);
+        const entry = Blocks.getEntryFromLine(line, argv.type);
         const location = Locations.getLocation(entry.gid);
 
         if (count === BLOCKS_PER_HASH - 1) {

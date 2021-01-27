@@ -1,13 +1,12 @@
 const readline = require("readline");
 const fs = require("fs");
+const { getLocationsPath } = require("./Files");
 
 const locations = {};
 
 async function loadLocations() {
     const readLocation = readline.createInterface({
-        input: fs.createReadStream(
-            __dirname + "/../../data/GeoIp2-City-Locations-en.csv"
-        ),
+        input: fs.createReadStream(getLocationsPath()),
         output: false,
         console: false,
     });

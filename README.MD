@@ -16,15 +16,15 @@ You must put maxmind CSVs into the `data` folder:
 ./data/GeoIP2-City-Locations-en.csv
 ```
 
-## Generate the database:
+## Export the database:
 
 ```
-npm run build
+npm run build -- --type=IPv4|IPv6
 ```
 
 the output will be located in `./out` named like this:
 
-`./out/out-with-locations.json`
+`./out/${YYYYMMAA}_out_${IPv4|IPv6}.json`
 
 ### Example entry:
 

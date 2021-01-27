@@ -1,7 +1,11 @@
-const CIDR = require("ip-cidr");
-const inet = require("inet");
+const { Address6, Address4 } = require("ip-address");
 
-function getEntryFromLine(line) {
+const Address = {
+    IPv4: Address4,
+    IPv6: Address6,
+};
+
+function getEntryFromLine(line, type) {
     let [
         network,
         geoname_id,
@@ -17,7 +21,7 @@ function getEntryFromLine(line) {
     geoname_id = parseInt(geoname_id, 10) || 0;
 
     return {
-        ips: inet.aton(new CIDR(network).start()),
+        ips: new Address[type](network).startAddress().bigInteger().toString(),
         gid: geoname_id,
         pc: postal_code,
     };
