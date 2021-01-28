@@ -9,7 +9,7 @@ function getDate() {
  * @returns {string}
  */
 function getManifestPath(type) {
-    return `${__dirname}/../../out/${DATE}_manifest_${type}.json`;
+    return `${__dirname}/../../out/manifest_${DATE}_${type}.json`;
 }
 
 /**
@@ -17,7 +17,7 @@ function getManifestPath(type) {
  * @returns {string}
  */
 function getOutPath(type) {
-    return `${__dirname}/../../out/${DATE}_out_${type}.json`;
+    return `${__dirname}/../../out/out_${DATE}_${type}.json`;
 }
 
 /**
@@ -43,7 +43,7 @@ function getManifest(type) {
  * @param {"IPv4"|"IPv6"} type
  */
 function getTableName(type) {
-    return `${DATE}_geoip_${type}`;
+    return `geoip_${DATE}_${type}`;
 }
 
 /**
